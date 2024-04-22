@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <source-directory> <destination-directory>"
+    exit 1
+fi
+
+src_dir=$(realpath "$1")
+dest_dir=$(realpath "$2")
+
+if [ ! -d "$src_dir" ]; then
+    echo "Source directory doesn't exist."
+    exit 1
+fi
+
+mkdir -p "$dest_dir"
+
+copy_file () {
+    local src_file=$1
+    local base_file=$(basename "$src_file")
+    local dest_file_path="${dest_dir}/${src_file//\//_}"
+
+    while [ -e "$dest_file_path" ]; do
+        dest_file_path="${dest_dir}/${base_file}_$(date +%s%N)"
+    done
+
+    cp "$src_file" "$dest_file_path"
+}
+
+export -f copy_file
+export src_dir
+export dest_dir
+
+find "$src_dir" -type f -exec bash -c 'copy_file "$0"' {} \;
